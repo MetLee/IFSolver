@@ -41,6 +41,13 @@ def cmpImage(cmpim, dlist, portal_list):
     if pic_match[0]["matches"] / len(ks) < 0.4:
         valid = False
 
+    if not os.path.exists('Portal_Export.matched.csv'):
+        with open('Portal_Export.matched.csv', 'w', encoding='utf-8') as csvfile:
+            csvfile.write('Name, Latitude, Longitude, Image\n')
+    with open('Portal_Export.matched.csv', 'a', encoding='utf-8') as csvfile:
+        csvfile.write('"{}",{},{},"{}",0\n'.format(
+            portal_list[pic_match[0]['id']]['Name'].replace('"', '""'), portal_list[pic_match[0]['id']]['Latitude'], portal_list[pic_match[0]['id']]['Longitude'], portal_list[pic_match[0]['id']]['Image']))
+
     return (unquote_u(portal_list[pic_match[0]["id"]]["Name"]),
             portal_list[pic_match[0]["id"]]["Latitude"],
             portal_list[pic_match[0]["id"]]["Longitude"],

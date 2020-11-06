@@ -15,6 +15,8 @@ def main():
             os.remove('result_full.jpg')
         if os.path.exists('result.json'):
             os.remove('result.json')
+        if os.path.exists('Portal_Export.matched.csv'):
+            os.remove('Portal_Export.matched.csv')
         fileList = glob.glob('result_*.jpg')
         for filePath in fileList:
             os.remove(filePath)
