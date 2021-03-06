@@ -81,19 +81,23 @@ def main():
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
             cv2.putText(img, 'Lng: ' + lng, (x, y + 80),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        if str(int(x/200)) not in row.keys():
-            row[str(int(x/200))] = [{
+        if str(round((x+0.5*w)/100)) not in row.keys():
+            row[str(round((x+0.5*w)/100))] = [{
                 "id": idx,
                 "name": pname,
+                "x": x,
+                "x+0.5w": x+0.5*w,
                 "y": y/100,
                 "lat": lat,
                 "lng": lng,
                 "valid": valid
             }]
         else:
-            row[str(int(x/200))].append({
+            row[str(round((x+0.5*w)/100))].append({
                 "id": idx,
                 "name": pname,
+                "x": x,
+                "x+0.5w": x+0.5*w,
                 "y": y/100,
                 "lat": lat,
                 "lng": lng,
