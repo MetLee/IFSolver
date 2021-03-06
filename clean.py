@@ -7,6 +7,8 @@ def main():
     if input('Do you want to clean generated data? (y/n)') == 'y':
         if os.path.isdir('cmp'):
             shutil.rmtree('cmp')
+        if os.path.isdir('combine'):
+            shutil.rmtree('combine')
         if os.path.exists('result_pre.jpg'):
             os.remove('result_pre.jpg')
         if os.path.exists('result.jpg'):

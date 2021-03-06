@@ -18,6 +18,8 @@ def create_dir():
         os.makedirs('data_feature_preview')
     if not path.exists('cmp'):
         os.makedirs('cmp')
+    if not path.exists('combine'):
+        os.makedirs('combine')
 
 def main_download():
     print("[IFSolver] Downloading latest intel package")
@@ -69,12 +71,60 @@ def main():
     portal_list = main_download()
     dlist = main_features(portal_list)
     img, bds, row = main_fix()
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
     print("[IFSolver] Comparing pictures")
+
+    main_combined = []
+    fast = cv2.ORB_create()
+    for idx, f in enumerate(bds):
+        (x, y, w, h) = f['bd']
+        found = False
+        for j, item in enumerate(main_combined):
+            if cmpImageMain(img_gray[y: y + h, x: x + w], item['d']):
+                bds[idx]['combined_number'] = j
+                found = True
+                matchx, matchy, _ = item['image'].shape #
+                resize_img = cv2.resize(
+                    img[y: y + h, x: x + w], (matchy, matchx))
+                main_combined[j]['result_image'] = np.hstack(
+                    (item['result_image'], resize_img))
+                main_combined[j]['combined'] = True
+                break
+        if not found:
+            _, d = fast.detectAndCompute(img_gray[y: y + h, x: x + w], None)
+            bds[idx]['combined_number'] = len(main_combined)
+            # main_combined.append(
+            #     {'d': d, 'image': img[y: y + h, x: x + w])
+            main_combined.append(
+                {'d': d, 'image': img[y: y + h, x: x + w], 'result_image': img[y: y + h, x: x + w].copy(), 'combined': False})
+
+        print('\rCombining ' + str(idx) + '/' + str(len(bds) - 1), end='', flush=True)
+        if found:
+            print(' Found    ', end='', flush=True)
+        else:
+            print(' Not Found', end='', flush=True)
+
+    print('')
+    print('----------------------------')
+    print('Individual pictures: ' + str(len(main_combined)))
+    print('----------------------------')
+
+    for idx, group_combine in enumerate(main_combined):
+        if group_combine['combined']:
+            cv2.imencode('.jpg', group_combine['result_image'])[1].tofile("combine/" + str(idx) + ".jpg") 
+
+    for idx, item in enumerate(main_combined):
+        print('Result for combined pic ' + str(idx))
+        pname, lat, lng, valid = cmpImage(item['image'], dlist, portal_list)
+        main_combined[idx]['result'] = (pname, lat, lng, valid)
+        print('----------------------------')
+
     for idx, f in enumerate(bds):
         (x, y, w, h) = f["bd"]
-        print("Result for pic " + str(idx))
-        pname, lat, lng, valid = cmpImage(
-            img[y:y+h, x:x+w], dlist, portal_list)
+        print("\rResult for pic " + str(idx), end='', flush=True)
+        (pname, lat, lng,
+         valid) = main_combined[bds[idx]['combined_number']]['result']
+
         if valid:
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 5)
             cv2.putText(img, 'Lat: ' + lat, (x, y + 40),
@@ -103,11 +153,12 @@ def main():
                 "lng": lng,
                 "valid": valid
             })
-        print("----------------------------")
+    print('')
+
     for k in row.keys():
         row[k] = sorted(row[k], key=lambda kk: kk['y'])
     with open('result.json', 'w') as fp:
-        json.dump(row, fp)
+        json.dump(row, fp, sort_keys=True)
     cv2.imwrite("result.jpg", img)
     print("[IFSolver] Doing geograpjical image generation")
     geo()

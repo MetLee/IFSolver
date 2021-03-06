@@ -54,6 +54,15 @@ def cmpImage(cmpim, dlist, portal_list):
             valid)
 
 
+def cmpImageMain(cmpim, features):
+    ks, des = fast.detectAndCompute(cmpim, None)
+    matches = len(bf.match(des, features))
+    total_keys = len(ks)
+    if matches / total_keys < 0.75:
+        return False
+    else:
+        return True
+
 def get_features(pid):
     if not os.path.exists('data_feature/' + str(pid) + ".jpg.npy"):
         img = cv2.imread('data/' + str(pid) + ".jpg", 0)
